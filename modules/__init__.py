@@ -62,8 +62,18 @@ async def forward_slashless(
                     gd_module = module.split("_")
                     find_response = globals()[f"gitadora_{gd_module[-1]}_{method}"]
                     return await find_response(gd_module[0], request)
+            elif game_code == "LAV" or game_code == "XIF":
+                find_response = globals()[f"polaris_{module}_{method}"]
             return await find_response(request)
-        except (KeyError, UnboundLocalError):
+        except (KeyError, UnboundLocalError) as e:
+            print(f"FWDR DEBUG: 404 Error. f='{f}' model='{model}'")
+            print(f"FWDR DEBUG: Parsed -> module='{module}' method='{method}' game_code='{model.split(':')[0] if model else 'None'}'")
+            print(f"FWDR DEBUG: Exception: {e}")
+            target_key = f"polaris_{module}_{method}"
+            if request.url.path == "/fwdr":
+                 print(f"FWDR DEBUG: Target globals key expected: '{target_key}'")
+                 print(f"FWDR DEBUG: Key in globals: {target_key in globals()}")
+            
             print("Try URL Slash 1 (On) if this game is supported.")
             return Response(status_code=404)
 

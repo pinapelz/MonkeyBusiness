@@ -129,6 +129,9 @@ async def core_get_game_version_from_software_version(software_version):
     elif model == "REC":
         return 1
 
+    elif model == "XIF":
+        return 1
+
     # TODO: ???
     # elif model == "PAN":
     #     return 0
@@ -192,16 +195,29 @@ async def core_process_request(request):
 async def core_prepare_response(request, xml):
     binxml = KBinXML(xml)
 
-    if request.is_binxml:
+    if False and request.is_binxml:
+        # [Fix] Force UTF-8 encoding for Binary XML to match Client expectation (XrpcBase.cs uses UTF8)
+        # Default is 'cp932', which causes Mojibake.
+        # NOTE: KBinXML requires uppercase 'UTF-8', lowercase raises KeyError.
         xml_binary = binxml.to_binary()
     else:
-        xml_binary = binxml.to_text().encode("utf-8")  # TODO: Proper encoding
+        # Client (Unity/Mono) expects UTF-8 (XrpcBase.cs: Encoding.UTF8.GetString)
+        xml_text = binxml.to_text() 
+        # Ensure declaration matches (KBinXML might default to UTF-8, which is good)
+        if 'encoding="UTF-8"' not in xml_text and "encoding='UTF-8'" not in xml_text:
+             xml_text = xml_text.replace("?>", ' encoding="UTF-8"?>', 1)
+        
+        xml_binary = xml_text.encode("utf-8")
 
     if config.verbose_log:
         print("\033[91mRESPONSE\033[0m:")
         print(binxml.to_text())
 
     response_headers = {"User-Agent": "EAMUSE.Httpac/1.0"}
+    
+    # Explicitly state UTF-8
+    if not request.is_binxml:
+        response_headers["Content-Type"] = "text/xml; charset=utf-8"
 
     if config.response_compression:
         response_headers["X-Compress"] = request.compress
