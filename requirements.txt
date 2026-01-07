@@ -1,0 +1,6 @@
+fastapi
+kbinxml>=2.0
+pycryptodomex
+python-multipart
+tinydb
+uvicorn[standard]
