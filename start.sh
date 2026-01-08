@@ -3,17 +3,25 @@
 ver="3.14"
 py="python$ver"
 
-if ! command -v $py &> /dev/null
-then
+# Ensure Python exists (uv still relies on system Python)
+if ! command -v "$py" &> /dev/null; then
     echo "$py not found"
-    exit
+    exit 1
 fi
 
-if [ ! -d .venv/ ]
-then
-    $py -m venv .venv
+if ! command -v uv &> /dev/null; then
+    echo "uv not found"
+    echo "Install with: pip install uv  OR  https://astral.sh/uv"
+    exit 1
 fi
 
-source .venv/bin/activate
-$py -m pip install -r requirements.txt
-$py pyeamu.py
+
+if [ ! -d ".venv" ]; then
+    echo "Creating virtual environment with uv..."
+    uv venv .venv --python "$py"
+fi
+
+echo "Installing dependencies..."
+uv pip install -r requirements.txt
+
+.venv/bin/python pyeamu.py

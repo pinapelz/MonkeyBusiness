@@ -1,31 +1,31 @@
 @echo off
-
 TITLE MB
 
 cd /d %~dp0
 
-py --version 3 >nul 2>&1
-if errorlevel 1 goto install
+REM Check for uv
+where uv >nul 2>&1
+if errorlevel 1 goto install_uv
 
-if not exist .venv\Scripts\activate.bat (
-    py -m venv .venv
-    .venv\Scripts\activate.bat
-    py -m pip install -r requirements.txt
-    py pyeamu.py
-) else (
-    .venv\Scripts\activate.bat
-    py pyeamu.py
+REM Create venv if missing
+if not exist .venv (
+    uv venv .venv
 )
+
+REM Install dependencies (fast, cached)
+uv pip install -r requirements.txt
+
+REM Run script inside uv venv
+uv run pyeamu.py
 
 goto :EOF
 
-:install
-echo https://www.python.org/downloads/
-echo Install Python with "Add python.exe to PATH" checked
+:install_uv
+echo uv is not installed.
+echo Install it from:
+echo https://docs.astral.sh/uv/
 echo:
-echo Install the previous version if latest is 3.xx.0
-echo - libraries may be broken on 3.xx.0
-echo - don't install pre-release version
+echo Windows (PowerShell):
+echo   iwr https://astral.sh/uv/install.ps1 -UseBasicParsing ^| iex
 echo:
-
 pause
